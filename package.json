@@ -1,0 +1,22 @@
+{
+  "name": "@liqd-js/heap",
+  "version": "1.0.0",
+  "description": "",
+  "author": "radixxko",
+  "license": "MIT",
+  "main": "dist/heap.js",
+  "types": "dist/heap.d.ts",
+  "files": [ "dist/**/*" ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "version": "npm i && tsc && npm publish --access public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liqd-js/heap.git"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
