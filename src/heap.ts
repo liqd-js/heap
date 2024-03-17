@@ -113,26 +113,28 @@ export default class Heap<T>
 		return undefined;
 	}
 
-	public get size()
+	public get size(): number
 	{
 		return this.data.length;
 	}
 
-	public top()
+	public top(): T | undefined // "peek"
 	{
 		return this.data.length ? this.data[0] : undefined;
 	}
 
-	public push( item: T )
+	public push( item: T ): this
 	{
 		this.data.push( item );
 
 		if( this.index ){ this.index.set( item, this.data.length - 1 ); }
 
 		this.sift_up( this.data.length - 1 );
+
+		return this;
 	}
 
-	public pop()
+	public pop(): T | undefined
 	{
 		if( this.data.length )
 		{
@@ -162,7 +164,7 @@ export default class Heap<T>
 		else{ return undefined; }
 	}
 
-	public update( item: T )
+	public update( item: T ): boolean
 	{
 		let i = this.get_item_index( item );
 
@@ -176,7 +178,7 @@ export default class Heap<T>
 		return false;
 	}
 
-	public delete( item: T )
+	public delete( item: T ): boolean
 	{
 		if( this.size )
 		{
@@ -210,7 +212,15 @@ export default class Heap<T>
 		return false;
 	}
 
-	public sort()
+	public clear(): this
+	{
+		this.data = new Array();
+		this.index = undefined;
+
+		return this;
+	}
+
+	public sort(): this
 	{
 		let data = this.data; this.data = new Array();
 

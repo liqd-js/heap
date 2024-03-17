@@ -1,6 +1,6 @@
 {
   "name": "@liqd-js/heap",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "author": "radixxko",
   "license": "MIT",
@@ -17,6 +17,6 @@
     "url": "git+https://github.com/liqd-js/heap.git"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.2"
   }
 }
