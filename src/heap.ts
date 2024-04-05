@@ -2,12 +2,12 @@ type Comparator<T> = ( a: T, b: T ) => number;
 
 export default class Heap<T,I=T>
 {
-	private data: T[];
-	private index: Map<I,number> | undefined;
-	private compare: Comparator<T>;
-	private get_id: ( item: T ) => I;
-	private sorted: boolean = true;
-	private updated = new Set<T>();
+	protected data: T[];
+	protected index: Map<I,number> | undefined;
+	protected compare: Comparator<T>;
+	protected get_id: ( item: T ) => I;
+	protected sorted: boolean = true;
+	protected updated = new Set<T>();
 
 	constructor( comparator?: Comparator<T>, id_getter?: ( item: T ) => I )
 	{
@@ -29,7 +29,7 @@ export default class Heap<T,I=T>
 		return heap;
 	}
 
-	private sift_up( i: number )
+	protected sift_up( i: number )
 	{
 		let pi = ( i - 1 ) >> 1;
 
@@ -50,7 +50,7 @@ export default class Heap<T,I=T>
 		}
 	}
 
-	private sift_down( i: number )
+	protected sift_down( i: number )
 	{
 		let ci = 2 * i + 1;
 
@@ -77,7 +77,7 @@ export default class Heap<T,I=T>
 		}
 	}
 
-	private sift( i: number )
+	protected sift( i: number )
 	{
 		if( i !== 0 && this.compare( this.data[i], this.data[( i - 1 ) >> 1] ) < 0 )
 		{
@@ -89,7 +89,7 @@ export default class Heap<T,I=T>
 		}
 	}
 
-	private reindex()
+	protected reindex()
 	{
 		this.index = new Map();
 
@@ -99,7 +99,7 @@ export default class Heap<T,I=T>
 		}
 	}
 
-	private get_item_index( item: T ): number | void
+	protected get_item_index( item: T ): number | void
 	{
 		if( this.data.length )
 		{
@@ -256,7 +256,7 @@ export default class Heap<T,I=T>
 		return this;
 	}
 
-	private sort_updated(): void
+	protected sort_updated(): void
 	{
 		for( let item of this.updated )
 		{
