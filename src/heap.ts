@@ -1,20 +1,25 @@
 type Comparator<T> = ( a: T, b: T ) => number;
 
-export default class Heap<T>
+export default class Heap<T,I=T>
 {
 	private data: T[];
-	private index: Map<T,number> | undefined;
+	private index: Map<I,number> | undefined;
 	private compare: Comparator<T>;
+	private get_id: ( item: T ) => I;
+	private sorted: boolean = true;
+	private updated = new Set<T>();
 
-	constructor( comparator?: Comparator<T> )
+	constructor( comparator?: Comparator<T>, id_getter?: ( item: T ) => I )
 	{
 		this.data = new Array();
 		this.compare = comparator ? comparator : ( a: T, b: T ) => a < b ? -1 : 1;
+		//@ts-ignore
+		this.get_id = id_getter ?? ( item => item ) as ( item: T ) => I;
 	}
 
-	static from<T>( container: Array<T> | Set<T> | Map<any,T>, comparator: Comparator<T> )
+	static from<T,I>( container: Array<T> | Set<T> | Map<any,T>, comparator?: Comparator<T>, id_getter?: ( item: T ) => I )
 	{
-		let heap = new Heap<T>( comparator );
+		let heap = new Heap<T,I>( comparator, id_getter );
 
 		for( const item of container.values() )
 		{
@@ -36,8 +41,8 @@ export default class Heap<T>
 
 			if( this.index )
 			{
-				this.index.set( this.data[i], i );
-				this.index.set( this.data[pi], pi );
+				this.index.set( this.get_id( this.data[i]), i );
+				this.index.set( this.get_id( this.data[pi]), pi );
 			}
 
 			i = pi;
@@ -61,8 +66,8 @@ export default class Heap<T>
 
 				if( this.index )
 				{
-					this.index.set( this.data[i], i );
-					this.index.set( this.data[ci], ci );
+					this.index.set( this.get_id( this.data[i]), i );
+					this.index.set( this.get_id( this.data[ci]), ci );
 				}
 
 				i = ci;
@@ -90,11 +95,11 @@ export default class Heap<T>
 
 		for( let i = 0; i < this.data.length; ++i )
 		{
-			this.index.set( this.data[i], i );
+			this.index.set( this.get_id( this.data[i] ), i );
 		}
 	}
 
-	private get_item_index( item: T )
+	private get_item_index( item: T ): number | void
 	{
 		if( this.data.length )
 		{
@@ -106,11 +111,9 @@ export default class Heap<T>
 			{
 				if( !this.index ){ this.reindex(); }
 
-				return this.index!.get( item );
+				return this.index!.get( this.get_id( item ));
 			}
 		}
-
-		return undefined;
 	}
 
 	public get size(): number
@@ -118,26 +121,33 @@ export default class Heap<T>
 		return this.data.length;
 	}
 
-	public top(): T | undefined // "peek"
+	public top(): T | void // "peek"
 	{
-		return this.data.length ? this.data[0] : undefined;
+		if( this.data.length )
+		{
+			if( !this.sorted ){ this.sort_updated() }
+
+			return this.data[0];
+		}
 	}
 
 	public push( item: T ): this
 	{
 		this.data.push( item );
 
-		if( this.index ){ this.index.set( item, this.data.length - 1 ); }
+		if( this.index ){ this.index.set( this.get_id( item ), this.data.length - 1 )}
 
 		this.sift_up( this.data.length - 1 );
 
 		return this;
 	}
 
-	public pop(): T | undefined
+	public pop(): T | void
 	{
 		if( this.data.length )
 		{
+			if( !this.sorted ){ this.sort_updated() }
+
 			let last = this.data.pop()!;
 
 			if( this.data.length )
@@ -146,8 +156,8 @@ export default class Heap<T>
 
 				if( this.index )
 				{
-					this.index.delete( top );
-					this.index.set( last, 0 );
+					this.index.delete( this.get_id( top ));
+					this.index.set( this.get_id( last ), 0 );
 				}
 
 				this.sift_down( 0 );
@@ -156,12 +166,31 @@ export default class Heap<T>
 			}
 			else
 			{
-				if( this.index ){ this.index.delete( last ); }
+				if( this.index ){ this.index.delete( this.get_id( last ))}
 
 				return last;
 			}
 		}
-		else{ return undefined; }
+	}
+
+	public get( id: I ): T | void
+	{
+		if( this.data.length )
+		{
+			if( !this.index ){ this.reindex(); }
+
+			const index = this.index!.get( id );
+			
+			if( index !== undefined )
+			{
+				return this.data[index];
+			}
+		}
+	}
+
+	public values(): IterableIterator<T>
+	{
+		return this.data.values();
 	}
 
 	public update( item: T ): boolean
@@ -170,7 +199,13 @@ export default class Heap<T>
 
 		if( i !== undefined )
 		{
-			this.sift( i );
+			this.sorted = false;
+			this.updated.add( item );
+
+			if( this.updated.size > Math.max( 10, this.data.length * 0.1 ))
+			{
+				this.sort_updated();
+			}
 
 			return true;
 		}
@@ -194,12 +229,12 @@ export default class Heap<T>
 				{
 					let last = this.data.pop()!;
 
-					this.index!.delete( item );
+					this.index!.delete( this.get_id( item ));
 
 					if( i < this.data.length )
 					{
 						this.data[i] = last;
-						this.index!.set( last, i );
+						this.index!.set( this.get_id( last ), i );
 
 						this.sift( i );
 					}
@@ -216,20 +251,29 @@ export default class Heap<T>
 	{
 		this.data = new Array();
 		this.index = undefined;
+		this.sorted = true;
 
 		return this;
 	}
 
+	private sort_updated(): void
+	{
+		for( let item of this.updated )
+		{
+			this.sift( this.get_item_index( item )! );
+		}
+	}
+
 	public sort(): this
 	{
-		let data = this.data; this.data = new Array();
-
-		if( this.index ){ this.index = new Map(); }
-
-		for( const item of data )
+		for( let i = 0; i < this.data.length; ++i )
 		{
-			this.push( item );
+			this.sift_up( i );
 		}
+
+		this.index && ( this.index = new Map());
+		this.updated = new Set<T>();
+		this.sorted = true;
 
 		return this;
 	}
