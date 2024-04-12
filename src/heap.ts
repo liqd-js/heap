@@ -223,7 +223,7 @@ export default class Heap<T,I=T>
 
 			if( i !== undefined )
 			{
-				if( i === 0 )
+				if( i === 0 && this.sorted )
 				{
 					this.pop();
 				}
@@ -231,6 +231,7 @@ export default class Heap<T,I=T>
 				{
 					let last = this.data.pop()!;
 
+					this.updated.has( item ) && this.updated.delete( item );
 					this.index!.delete( this.get_id( item ));
 
 					if( i < this.data.length )
@@ -254,6 +255,7 @@ export default class Heap<T,I=T>
 		this.data = new Array();
 		this.index = undefined;
 		this.sorted = true;
+		this.updated.clear();
 
 		return this;
 	}
@@ -264,6 +266,9 @@ export default class Heap<T,I=T>
 		{
 			this.sift( this.get_item_index( item )! );
 		}
+
+		this.sorted = true;
+		this.updated.clear();
 	}
 
 	public sort(): this
@@ -273,9 +278,9 @@ export default class Heap<T,I=T>
 			this.sift_up( i );
 		}
 
-		this.index && ( this.index = new Map());
-		this.updated = new Set<T>();
+		this.index = undefined;
 		this.sorted = true;
+		this.updated.clear();
 
 		return this;
 	}
