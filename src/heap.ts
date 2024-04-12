@@ -79,6 +79,8 @@ export default class Heap<T,I=T>
 
 	protected sift( i: number )
 	{
+		if( this.data.length < 2 ){ return }
+
 		if( i !== 0 && this.compare( this.data[i], this.data[( i - 1 ) >> 1] ) < 0 )
 		{
 			this.sift_up( i );
